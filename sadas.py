@@ -26,7 +26,7 @@ st.set_page_config(
 # Hugging Face API configuration
 API_URL = "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1"
 headers = {
-    "Authorization": "Bearer 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",
+    "Authorization": "Bearer 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",
     "Content-Type": "application/json"
 }
 
@@ -535,13 +535,13 @@ def handle_contact_info(email, phone):
     med_details = ""
     if "med_output" in st.session_state:
         output = st.session_state["med_output"]
-        med_details = (
-            f"\n\nYour Medication Schedule:\n"
-            f"Medication: {output['medication']} {output['dosage']}\n"
-            f"Schedule: {output['frequency']} {output['timing']}\n"
-            f"Duration: {output['duration']}\n"
-            f"Next Refill: {output['refill_date']}\n"
-        )
+        med_details = f"""
+Your Medication Schedule:
+Medication: {output['medication']} {output['dosage']}
+Schedule: {output['frequency']} {output['timing']}
+Duration: {output['duration']}
+Next Refill: {output['refill_date']}
+"""
 
     # ------------------ SMTP Email Part ------------------
     smtp_server = "smtp.gmail.com"
@@ -550,11 +550,16 @@ def handle_contact_info(email, phone):
     sender_password = "vifntmdgfjgnqzen"
 
     subject = "Thank you for providing your contact info"
-    body = (
-        f"Hello,\n\nWe’ve received your contact info.\n"
-        f"Phone: {phone}\nEmail: {email}\n"
-        f"{med_details}\nBest regards,\nYour Healthcare App"
-    )
+    body = f"""
+Hello,
+
+We've received your contact info.
+Phone: {phone}
+Email: {email}
+{med_details}
+Best regards,
+Your Healthcare App
+"""
 
     msg = MIMEText(body)
     msg["From"] = sender_email
@@ -573,22 +578,19 @@ def handle_contact_info(email, phone):
 
     # ------------------ Twilio SMS Part ------------------
     account_sid = "AC2d64558c9c097549ab4bda1adc5cf996"
-    auth_token = "c117a47d9046ab107a610502e798d947"
+    auth_token = "1b607c0814fa54d6414f0ceff59bf52d"
     twilio_number = "+12183001925"  # Your Twilio number
-    sms_body = (
-        f"Hi! Your contact info was received. "
-        f"{med_details if med_details else 'We\'ll be in touch.'}"
-    )
+    suffix = med_details if med_details else "We'll be in touch."
+    sms_body = f"Hi! Your contact info was received. {suffix}"
+
     try:
         client = Client(account_sid, auth_token)
         message = client.messages.create(
-        body=sms_body,
-        from_="+12183001925",  # This is your Twilio number
-        to="+21629355686"     # This is your verified personal number
-        
-
+            body=sms_body,
+            from_=twilio_number,
+            to=phone
         )
-        st.success("✅ SMS sent: ")
+        st.success("✅ SMS sent: " + message.sid)
     except Exception as e:
         st.error(f"❌ SMS failed: {e}")
 
